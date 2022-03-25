@@ -2,11 +2,6 @@ package com.ecnu.counseling.common.result;
 
 import lombok.AllArgsConstructor;
 
-/**
- * @Description
- * @Author wuhongbin
- * @Date 2022/3/20 12:58 下午
- */
 @AllArgsConstructor
 public class BaseResult {
 

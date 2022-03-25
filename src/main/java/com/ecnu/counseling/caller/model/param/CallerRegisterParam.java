@@ -10,11 +10,6 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.apache.commons.lang3.StringUtils;
 
-/**
- * @Description
- * @Author wuhongbin
- * @Date 2022/3/19 10:58 下午
- */
 @Data
 @SuperBuilder
 @AllArgsConstructor

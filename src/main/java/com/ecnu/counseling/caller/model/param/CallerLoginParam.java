@@ -8,11 +8,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 
-/**
- * @Description
- * @Author wuhongbin
- * @Date 2022/3/20 5:35 下午
- */
 @Data
 @Builder
 @AllArgsConstructor

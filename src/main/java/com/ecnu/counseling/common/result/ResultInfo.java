@@ -1,10 +1,5 @@
 package com.ecnu.counseling.common.result;
 
-/**
- * @Description
- * @Author wuhongbin
- * @Date 2022/3/20 4:55 下午
- */
 public class ResultInfo<T> {
 
     private Boolean isRight;

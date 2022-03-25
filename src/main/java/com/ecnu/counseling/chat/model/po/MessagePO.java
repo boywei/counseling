@@ -8,11 +8,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-/**
- * @Description
- * @Author wuhongbin
- * @Date 2022/3/21 2:12 下午
- */
 @Data
 @SuperBuilder
 @AllArgsConstructor

@@ -20,11 +20,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
 
-/**
- * @Description
- * @Author wuhongbin
- * @Date 2022/3/21 2:23 下午
- */
 @Service
 public class MessageServiceImpl extends ServiceImpl<MessageMapper, MessagePO> implements MessageService {
 
