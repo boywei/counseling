@@ -1,10 +1,5 @@
 package com.ecnu.counseling.common.constant;
 
-/**
- * @Description 用户相关常量
- * @Author wuhongbin
- * @Date 2022/3/20 9:14 下午
- */
 public class UserConstant {
 
     /**

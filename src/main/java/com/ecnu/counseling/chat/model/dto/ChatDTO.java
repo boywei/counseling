@@ -6,11 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * @Description
- * @Author wuhongbin
- * @Date 2022/3/21 1:07 上午
- */
 @Data
 @Builder
 @AllArgsConstructor

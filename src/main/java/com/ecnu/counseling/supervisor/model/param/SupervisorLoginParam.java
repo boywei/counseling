@@ -1,4 +1,4 @@
-package com.ecnu.counseling.caller.model.param;
+package com.ecnu.counseling.supervisor.model.param;
 
 import com.ecnu.counseling.common.result.BaseResult;
 import java.util.regex.Pattern;
@@ -8,11 +8,17 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 
+/**
+ * @Description
+ * @Author wei
+ * @Date 2022/3/21 1:02 上午
+ */
+
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class CallerLoginParam {
+public class SupervisorLoginParam {
 
     private String phone;
 

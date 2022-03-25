@@ -15,11 +15,6 @@ import java.util.Collection;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
-/**
- * @Description
- * @Author wuhongbin
- * @Date 2022/3/20 10:18 下午
- */
 @Service
 public class CounselorServiceImpl extends ServiceImpl<CounselorMapper, CounselorPO> implements CounselorService {
 

@@ -3,20 +3,7 @@ package com.ecnu.counseling.common.util;
 import org.apache.logging.log4j.util.Strings;
 import org.apache.shiro.crypto.hash.Md5Hash;
 
-/**
- * @Description
- * @Author wuhongbin
- * @Date 2022/3/20 9:43 下午
- */
 public class Md5Util {
-
-    public static void main(String[] args) {
-        System.out.println(encryptPassword("wuhongbin", "12345"));
-        System.out.println(encryptPassword("wuhongbin", "12345"));
-        System.out.println(encryptPassword("wuhongbin", "12345"));
-        System.out.println(encryptPasswordPlus("wuhongbin", "12345", "  "));
-        System.out.println(encryptPassword("wuhongbin", "12346"));
-    }
 
     /**
      * MD5简易加密

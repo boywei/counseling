@@ -1,4 +1,4 @@
-package com.ecnu.counseling.caller.model.param;
+package com.ecnu.counseling.supervisor.model.param;
 
 import com.ecnu.counseling.common.constant.UserConstant;
 import com.ecnu.counseling.common.result.BaseResult;
@@ -10,21 +10,50 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.apache.commons.lang3.StringUtils;
 
+/**
+ * @Description
+ * @Author wei
+ * @Date 2022/3/21 1:02 上午
+ */
+
 @Data
 @SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
-public class CallerRegisterParam {
+public class SupervisorRegisterParam {
 
     private String name;
 
+    private Integer gender;
+
+    private Integer age;
+
+    private String idCard;
+
     private String phone;
+
+    private String email;
+
+    private String userName;
 
     private String password;
 
-    private String emergencyContactName;
+    private String workplace;
 
-    private String emergencyNumber;
+    private String position;
+
+    /**
+     * 在线状态0不在线1空闲2忙碌
+     */
+    private Integer status;
+
+    private String url;
+
+    private Integer countHelp;
+
+    private String qualification;
+
+    private String qualificationId;
 
     public BaseResult checkRegisterParam() {
         // name
@@ -44,17 +73,6 @@ public class CallerRegisterParam {
             return BaseResult.error("密码不可为空");
         }
 
-        // emergencyContactName
-        BaseResult contactNameResult = this.checkName(this.emergencyContactName);
-        if (!contactNameResult.isRight()) {
-            return contactNameResult;
-        }
-
-        // emergencyNumber
-        BaseResult emergencyNumberResult = this.checkPhone(this.emergencyNumber);
-        if (!emergencyNumberResult.isRight()) {
-            return emergencyNumberResult;
-        }
         return BaseResult.SUCCESS;
     }
 

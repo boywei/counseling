@@ -1,7 +1,7 @@
 package com.ecnu.counseling.admin.model.po;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.ecnu.counseling.caller.model.dto.CallerDTO;
+import com.ecnu.counseling.admin.model.dto.AdminDTO;
 import com.ecnu.counseling.common.model.po.BasePO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -24,8 +24,8 @@ public class AdminPO extends BasePO {
 
     private String password;
 
-    public CallerDTO convert2DTO() {
-        return CallerDTO.builder()
+    public AdminDTO convert2DTO() {
+        return AdminDTO.builder()
                 .id(this.id)
                 .name(this.name)
                 .password(this.password)

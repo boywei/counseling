@@ -1,4 +1,4 @@
-package com.ecnu.counseling.chat.model.param;
+package com.ecnu.counseling.help.model.param;
 
 import com.ecnu.counseling.common.model.param.PagingParam;
 import javax.validation.constraints.Min;
@@ -8,18 +8,23 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+/**
+ * @Description
+ * @Author wei
+ * @Date 2022/3/21 11:59 上午
+ */
 @Data
 @SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ChatRecordDetailQueryParam extends PagingParam {
+public class HelpMessageDetailQueryParam extends PagingParam {
 
     /**
      * 咨询会话记录id
      */
     @NotNull(message = "咨询会话记录id不可为空")
     @Min(value = 1, message = "咨询会话记录id最小为1")
-    private Integer chatId;
+    private Integer helpId;
 
     /**
      * 查询消息者身份：0访客 1咨询师

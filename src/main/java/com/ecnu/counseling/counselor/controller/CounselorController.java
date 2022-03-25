@@ -20,11 +20,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * @Description
- * @Author wuhongbin
- * @Date 2022/3/20 10:01 下午
- */
 @RestController
 @RequestMapping("/api/counseling/counselor")
 public class CounselorController {

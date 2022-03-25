@@ -11,11 +11,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * @Description 一条聊天记录
- * @Author wuhongbin
- * @Date 2022/3/21 12:00 下午
- */
 @Data
 @Builder
 @AllArgsConstructor

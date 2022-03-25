@@ -1,4 +1,4 @@
-package com.ecnu.counseling.chat.model.param;
+package com.ecnu.counseling.help.model.param;
 
 import com.ecnu.counseling.common.model.param.PagingParam;
 import com.ecnu.counseling.common.result.BaseResult;
@@ -7,17 +7,22 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+/**
+ * @Description
+ * @Author wei
+ * @Date 2022/3/21 1:03 上午
+ */
 @Data
 @SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ChatRecordListQueryParam extends PagingParam {
+public class HelpRecordListQueryParam extends PagingParam {
 
-    private Integer callerId;
+    private Integer supervisorId;
 
     public BaseResult checkQueryParam() {
-        return callerId <= 0
-            ? BaseResult.error("访客id非法")
-            : super.checkParam();
+        return supervisorId <= 0
+                ? BaseResult.error("督导id非法")
+                : super.checkParam();
     }
 }

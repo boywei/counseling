@@ -8,11 +8,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-/**
- * @Description
- * @Author wuhongbin
- * @Date 2022/3/20 10:46 下午
- */
 @EqualsAndHashCode(callSuper = true)
 @Data
 @NoArgsConstructor

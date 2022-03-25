@@ -21,11 +21,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
 
-/**
- * @Description
- * @Author wuhongbin
- * @Date 2022/3/19 10:38 下午
- */
 @Service
 public class CallerServiceImpl extends ServiceImpl<CallerMapper, CallerPO> implements CallerService {
 

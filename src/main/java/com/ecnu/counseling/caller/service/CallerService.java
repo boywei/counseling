@@ -9,11 +9,6 @@ import com.ecnu.counseling.common.result.ResultInfo;
 import java.util.Collection;
 import java.util.List;
 
-/**
- * @Description
- * @Author wuhongbin
- * @Date 2022/3/19 10:38 下午
- */
 public interface CallerService {
 
     ResultInfo<Integer> register(CallerRegisterParam registerParam);

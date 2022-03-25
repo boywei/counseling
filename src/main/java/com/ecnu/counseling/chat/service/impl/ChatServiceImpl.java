@@ -16,11 +16,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
-/**
- * @Description
- * @Author wuhongbin
- * @Date 2022/3/21 12:53 上午
- */
 @Service
 public class ChatServiceImpl extends ServiceImpl<ChatMapper, ChatPO> implements ChatService {
 

@@ -40,11 +40,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * @Description
- * @Author wuhongbin
- * @Date 2022/3/21 12:52 上午
- */
 @RestController
 @RequestMapping("/api/counseling/chat")
 public class ChatController {
