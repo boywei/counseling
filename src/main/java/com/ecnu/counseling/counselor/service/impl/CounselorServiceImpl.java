@@ -22,7 +22,7 @@ public class CounselorServiceImpl extends ServiceImpl<CounselorMapper, Counselor
     public ListPagingResponse<CounselorPO> list(Collection<Integer> counselorIds, Integer start, Integer length) {
         LambdaQueryChainWrapper<CounselorPO> queryWrapper = new LambdaQueryChainWrapper<>(this.baseMapper)
             .in(CounselorPO::getStatus, Lists.newArrayList(1, 2))
-            .eq(BasePO::getIsDelete, 0);
+            .eq(BasePO::getIsDeleted, 0);
         Integer count = queryWrapper.count();
         if (count == 0) {
             return ListPagingResponse.EMPTY_SUCCESS;

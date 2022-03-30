@@ -23,7 +23,7 @@ public class ChatServiceImpl extends ServiceImpl<ChatMapper, ChatPO> implements 
     public ListPagingResponse<ChatDTO> queryRecordList(ChatRecordListQueryParam queryParam) {
         LambdaQueryChainWrapper<ChatPO> queryChainWrapper = new LambdaQueryChainWrapper<>(this.baseMapper)
             .eq(ChatPO::getCallerId, queryParam.getCallerId())
-            .eq(BasePO::getIsDelete, 0);
+            .eq(BasePO::getIsDeleted, 0);
         Integer count = queryChainWrapper.count();
         if (count == 0) {
             return ListPagingResponse.EMPTY_SUCCESS;

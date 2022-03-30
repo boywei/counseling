@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @Date 2022/3/19 10:37 下午
  */
 @RestController
-@RequestMapping("/api/counseling/admin")
+@RequestMapping("/admin")
 public class AdminController {
 
     @Autowired

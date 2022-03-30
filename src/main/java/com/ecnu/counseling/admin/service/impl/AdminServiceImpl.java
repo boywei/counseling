@@ -29,8 +29,13 @@ public class AdminServiceImpl extends ServiceImpl<AdminMapper, AdminPO> implemen
                 .eq(AdminPO::getPassword, Md5Util.encryptPassword(loginParam.getName(), loginParam.getPassword()))
                 .list();
         return CollectionUtils.isEmpty(pos)
-                ? ResultInfo.error("用户不存在")
+                ? ResultInfo.error("用户不存在或密码错误！")
                 : ResultInfo.success(pos.get(0).convert2DTO());
+    }
+
+    public static void main(String[] args) {
+        // 测试：amdin：a,a; caller: 19921878760,12345678
+        System.out.println(Md5Util.encryptPassword("19921878760", "12345678"));
     }
     
 }

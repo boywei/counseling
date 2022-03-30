@@ -16,7 +16,7 @@ public class EntityResponse<T> extends AbstractResponse {
         this.data = data;
     }
 
-    @JsonIgnore
+//    @JsonIgnore
     public T getData() {
         return this.data;
     }

@@ -28,7 +28,7 @@ public class HelpServiceImpl extends ServiceImpl<HelpMapper, HelpPO> implements 
     public ListPagingResponse<HelpDTO> queryRecordList(HelpRecordListQueryParam queryParam) {
         LambdaQueryChainWrapper<HelpPO> queryChainWrapper = new LambdaQueryChainWrapper<>(this.baseMapper)
                 .eq(HelpPO::getSupervisorId, queryParam.getSupervisorId())
-                .eq(BasePO::getIsDelete, 0);
+                .eq(BasePO::getIsDeleted, 0);
         Integer count = queryChainWrapper.count();
         if (count == 0) {
             return ListPagingResponse.EMPTY_SUCCESS;

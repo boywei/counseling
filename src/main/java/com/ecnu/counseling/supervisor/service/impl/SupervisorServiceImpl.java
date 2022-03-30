@@ -39,7 +39,7 @@ public class SupervisorServiceImpl extends ServiceImpl<SupervisorMapper, Supervi
     public ListPagingResponse<SupervisorPO> list(Collection<Integer> supervisorIds, Integer start, Integer length) {
         LambdaQueryChainWrapper<SupervisorPO> queryWrapper = new LambdaQueryChainWrapper<>(this.baseMapper)
                 .in(SupervisorPO::getStatus, Lists.newArrayList(1, 2))
-                .eq(BasePO::getIsDelete, 0);
+                .eq(BasePO::getIsDeleted, 0);
         Integer count = queryWrapper.count();
         if (count == 0) {
             return ListPagingResponse.EMPTY_SUCCESS;
@@ -55,12 +55,12 @@ public class SupervisorServiceImpl extends ServiceImpl<SupervisorMapper, Supervi
                 .eq(SupervisorPO::getPhone, registerParam.getPhone())
                 .count();
         if (count != 0) {
-            return ResultInfo.error("手机号已注册，请点击登陆");
+            return ResultInfo.error("手机号已注册，请点击登录");
         }
 
         SupervisorPO po = SupervisorPO.builder()
                 .name(registerParam.getName())
-                .password(Md5Util.encryptPassword(registerParam.getName(), registerParam.getPassword()))
+                .password(Md5Util.encryptPassword(registerParam.getPhone(), registerParam.getPassword()))
                 .phone(registerParam.getPhone())
                 .age(registerParam.getAge())
                 .gender(registerParam.getGender())
@@ -71,7 +71,7 @@ public class SupervisorServiceImpl extends ServiceImpl<SupervisorMapper, Supervi
                 .position(registerParam.getPosition())
                 .status(registerParam.getStatus())
                 .url(registerParam.getUrl())
-                .countHelp(registerParam.getCountHelp())
+//                .countHelp(registerParam.getCountHelp())
                 .qualification(registerParam.getQualification())
                 .qualificationId(registerParam.getQualificationId())
                 .build();
@@ -95,12 +95,12 @@ public class SupervisorServiceImpl extends ServiceImpl<SupervisorMapper, Supervi
                 .position(editParam.getPosition())
                 .status(editParam.getStatus())
                 .url(editParam.getUrl())
-                .countHelp(editParam.getCountHelp())
+//                .countHelp(editParam.getCountHelp())
                 .qualification(editParam.getQualification())
                 .qualificationId(editParam.getQualificationId())
                 .build();
         boolean update = new LambdaUpdateChainWrapper<>(this.baseMapper)
-                .eq(BasePO::getId, editParam.getSupervisorId())
+                .eq(BasePO::getId, editParam.getId())
                 .update(po);
         return update ? BaseResult.SUCCESS : BaseResult.error("不存在该条记录");
     }
@@ -111,15 +111,16 @@ public class SupervisorServiceImpl extends ServiceImpl<SupervisorMapper, Supervi
                 .eq(SupervisorPO::getPhone, loginParam.getPhone())
                 .eq(SupervisorPO::getPassword, Md5Util.encryptPassword(loginParam.getPhone(), loginParam.getPassword()))
                 .list();
+        System.out.println();
         return CollectionUtils.isEmpty(pos)
-                ? ResultInfo.error("用户不存在")
+                ? ResultInfo.error("手机号不存在或密码错误")
                 : ResultInfo.success(pos.get(0).convert2DTO());
     }
 
     @Override
     public ResultInfo<SupervisorDTO> detailById(Integer id) {
-        if (id <= 0) {
-            return ResultInfo.error("id不合法");
+        if (id == null || id <= 0) {
+            return ResultInfo.error("id不存在或不合法");
         }
         SupervisorPO po = this.getById(id);
         return po == null ? ResultInfo.error("数据不存在") : ResultInfo.success(po.convert2DTO());

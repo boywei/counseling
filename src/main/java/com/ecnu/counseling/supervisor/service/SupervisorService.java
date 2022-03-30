@@ -1,6 +1,7 @@
 package com.ecnu.counseling.supervisor.service;
 
 import com.ecnu.counseling.common.response.ListPagingResponse;
+import com.ecnu.counseling.supervisor.model.param.SupervisorQueryParam;
 import com.ecnu.counseling.supervisor.model.po.SupervisorPO;
 import java.util.Collection;
 import com.ecnu.counseling.supervisor.model.dto.SupervisorDTO;

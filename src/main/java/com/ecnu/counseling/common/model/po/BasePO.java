@@ -26,9 +26,9 @@ public class BasePO {
     /**
      * 逻辑删除
      */
-    @TableField("is_delete")
+    @TableField("is_deleted")
     @TableLogic(value = "0", delval = "1")
-    private Boolean isDelete;
+    private Boolean isDeleted;
 
     /**
      * 创建时间

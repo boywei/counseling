@@ -18,10 +18,13 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 public class SupervisorEditParam extends SupervisorRegisterParam{
 
-    private Integer supervisorId;
+    private Integer id;
 
     public BaseResult checkEditParam() {
-        if (supervisorId <= 0) {
+        if (id == null) {
+            return BaseResult.error("未指定id");
+        }
+        if (id <= 0) {
             return BaseResult.error("id非法");
         }
         return super.checkRegisterParam();

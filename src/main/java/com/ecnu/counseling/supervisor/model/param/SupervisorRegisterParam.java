@@ -49,7 +49,7 @@ public class SupervisorRegisterParam {
 
     private String url;
 
-    private Integer countHelp;
+//    private Integer countHelp;
 
     private String qualification;
 

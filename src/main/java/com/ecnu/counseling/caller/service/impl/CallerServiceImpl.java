@@ -35,7 +35,7 @@ public class CallerServiceImpl extends ServiceImpl<CallerMapper, CallerPO> imple
 
         CallerPO po = CallerPO.builder()
             .name(registerParam.getName())
-            .password(Md5Util.encryptPassword(registerParam.getName(), registerParam.getPassword()))
+            .password(Md5Util.encryptPassword(registerParam.getPhone(), registerParam.getPassword()))
             .phone(registerParam.getPhone())
             .emergencyContact(registerParam.getEmergencyContactName())
             .emergencyNumber(registerParam.getEmergencyNumber())
