@@ -21,18 +21,17 @@ public class CallerPO extends BasePO {
 
     private String password;
 
-    private String emergencyContact;
+    private String emergencyName;
 
-    private String emergencyNumber;
+    private String emergencyPhone;
 
     public CallerDTO convert2DTO() {
         return CallerDTO.builder()
             .id(this.id)
             .name(this.name)
             .phone(this.phone)
-            .password(this.password)
-            .emergencyContactName(this.emergencyContact)
-            .emergencyNumber(this.emergencyNumber)
+            .emergencyContactName(this.emergencyName)
+            .emergencyNumber(this.emergencyPhone)
             .build();
     }
 }

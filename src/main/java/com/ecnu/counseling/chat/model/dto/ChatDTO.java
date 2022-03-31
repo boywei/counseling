@@ -18,9 +18,9 @@ public class ChatDTO {
 
     private Integer counselorId;
 
-    private Long counselTime;
+    private Long startTime;
 
-    private Integer duration;
+    private Long endTime;
 
     /**
      * 0-5

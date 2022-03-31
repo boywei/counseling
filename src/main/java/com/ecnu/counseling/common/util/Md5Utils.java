@@ -3,7 +3,7 @@ package com.ecnu.counseling.common.util;
 import org.apache.logging.log4j.util.Strings;
 import org.apache.shiro.crypto.hash.Md5Hash;
 
-public class Md5Util {
+public class Md5Utils {
 
     /**
      * MD5简易加密

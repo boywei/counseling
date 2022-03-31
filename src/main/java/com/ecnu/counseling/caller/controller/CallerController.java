@@ -11,6 +11,9 @@ import com.ecnu.counseling.common.response.EntityResponse;
 import com.ecnu.counseling.common.response.ResponseCodeEnum;
 import com.ecnu.counseling.common.result.BaseResult;
 import com.ecnu.counseling.common.result.ResultInfo;
+import com.ecnu.counseling.tencentcloudim.util.TencentCloudImUtils;
+import java.util.Collections;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,12 +23,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/counseling/caller")
 public class CallerController {
 
     @Autowired
     private CallerService callerService;
+    @Autowired
+    private TencentCloudImUtils tencentCloudImUtils;
 
     @PostMapping("/register")
     public EntityResponse<Integer> register(@RequestBody CallerRegisterParam registerParam) {
@@ -34,9 +40,16 @@ public class CallerController {
             return new EntityResponse<>(ResponseCodeEnum.FORBIDDEN, checkResult.getMessage(), null);
         }
         ResultInfo<Integer> registerInfo = callerService.register(registerParam);
-        return registerInfo.isRight()
-            ? new EntityResponse<>(ResponseCodeEnum.SUCCESS, BaseConstant.SUCCESS, registerInfo.getData())
-            : new EntityResponse<>(ResponseCodeEnum.FORBIDDEN, registerInfo.getMessage(), null);
+        if (!registerInfo.isRight()) {
+            return new EntityResponse<>(ResponseCodeEnum.FORBIDDEN, registerInfo.getMessage(), null);
+        }
+        // 将账号导入腾讯im
+        String userId = registerInfo.getData().toString();
+        tencentCloudImUtils.accountImport(userId);
+        // 校验账号是否成功导入
+        String queryAccountResult = tencentCloudImUtils.queryAccount(Collections.singletonList(userId));
+        log.info("校验账号是否成功导入, useId = {}, resultMessage = {}", userId, queryAccountResult);
+        return new EntityResponse<>(ResponseCodeEnum.SUCCESS, BaseConstant.SUCCESS, registerInfo.getData());
     }
 
     @GetMapping("/detail/{id}")
