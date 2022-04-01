@@ -1,27 +1,31 @@
 package com.ecnu.counseling.counselor.controller;
 
-import com.ecnu.counseling.common.model.param.PagingParam;
+import com.ecnu.counseling.common.constant.BaseConstant;
 import com.ecnu.counseling.common.model.po.BasePO;
+import com.ecnu.counseling.common.response.BaseResponse;
+import com.ecnu.counseling.common.response.EntityResponse;
 import com.ecnu.counseling.common.response.ListPagingResponse;
 import com.ecnu.counseling.common.response.ResponseCodeEnum;
 import com.ecnu.counseling.common.result.BaseResult;
+import com.ecnu.counseling.common.result.ResultInfo;
 import com.ecnu.counseling.counselor.model.dto.CounselorDTO;
+import com.ecnu.counseling.counselor.model.param.CounselorEditParam;
+import com.ecnu.counseling.counselor.model.param.CounselorLoginParam;
 import com.ecnu.counseling.counselor.model.param.CounselorQueryParam;
+import com.ecnu.counseling.counselor.model.param.CounselorRegisterParam;
 import com.ecnu.counseling.counselor.model.po.CounselorPO;
 import com.ecnu.counseling.counselor.service.CounselorService;
+import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.apache.commons.collections4.CollectionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/counseling/counselor")
+@RequestMapping("/counselor")
 public class CounselorController {
 
     @Autowired
@@ -45,5 +49,48 @@ public class CounselorController {
         return null;
     }
 
+    @PostMapping("/register")
+    public EntityResponse<Integer> register(@RequestBody CounselorRegisterParam registerParam) {
+        BaseResult checkResult = registerParam.checkRegisterParam();
+        if (!checkResult.isRight()) {
+            return new EntityResponse<>(ResponseCodeEnum.FORBIDDEN, checkResult.getMessage(), null);
+        }
+        ResultInfo<Integer> registerInfo = counselorService.register(registerParam);
+        return registerInfo.isRight()
+                ? new EntityResponse<>(ResponseCodeEnum.SUCCESS, BaseConstant.SUCCESS, registerInfo.getData())
+                : new EntityResponse<>(ResponseCodeEnum.FORBIDDEN, registerInfo.getMessage(), null);
+    }
+
+    @GetMapping("/detail/{id}")
+    public EntityResponse<CounselorDTO> detail(@PathVariable("id") Integer id) {
+        ResultInfo<CounselorDTO> resultInfo = counselorService.detailById(id);
+        return resultInfo.isRight()
+                ? new EntityResponse<>(ResponseCodeEnum.SUCCESS, BaseConstant.SUCCESS, resultInfo.getData())
+                : new EntityResponse<>(ResponseCodeEnum.FORBIDDEN, resultInfo.getMessage(), null);
+    }
+
+    @PutMapping("/edit")
+    public BaseResponse edit(@RequestBody CounselorEditParam param) {
+        BaseResult checkResult = param.checkEditParam();
+        if (!checkResult.isRight()) {
+            return new BaseResponse(ResponseCodeEnum.FORBIDDEN, checkResult.getMessage());
+        }
+        BaseResult editResult = counselorService.edit(param);
+        return editResult.isRight()
+                ? BaseResponse.success()
+                : new BaseResponse(ResponseCodeEnum.FORBIDDEN, editResult.getMessage());
+    }
+
+    @PostMapping("/login")
+    public BaseResponse login(@RequestBody CounselorLoginParam param)  {
+        BaseResult checkResult = param.checkLoginParam();
+        if (!checkResult.isRight()) {
+            return new BaseResponse(ResponseCodeEnum.FORBIDDEN, checkResult.getMessage());
+        }
+        ResultInfo<CounselorDTO> loginResult = counselorService.login(param);
+        return loginResult.isRight()
+                ? BaseResponse.success()
+                : new BaseResponse(ResponseCodeEnum.FORBIDDEN, loginResult.getMessage());
+    }
 
 }
