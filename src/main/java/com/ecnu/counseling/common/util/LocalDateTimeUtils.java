@@ -15,6 +15,9 @@ public class LocalDateTimeUtils {
      * @return
      */
     public static Long getTimeStampMilli(LocalDateTime localDateTime) {
+        if (localDateTime == null) {
+            return null;
+        }
         Instant instant = localDateTime.atZone(defaultZoneId).toInstant();
         long timeStamp = instant.toEpochMilli();
         return timeStamp;
