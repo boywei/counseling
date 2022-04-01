@@ -20,4 +20,6 @@ public interface CallerService {
     ResultInfo<CallerDTO> detailById(Integer id);
 
     ResultInfo<List<CallerDTO>> detailByIds(Collection<Integer> ids);
+
+    BaseResult allExist(Collection<Integer> ids);
 }

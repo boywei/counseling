@@ -17,8 +17,6 @@ public class CallerDTO {
 
     private String phone;
 
-    private String password;
-
     private String emergencyContactName;
 
     private String emergencyNumber;

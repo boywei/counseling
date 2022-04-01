@@ -11,6 +11,8 @@ import com.ecnu.counseling.common.response.ResponseCodeEnum;
 import com.ecnu.counseling.common.result.BaseResult;
 import com.ecnu.counseling.common.result.ResultInfo;
 import com.ecnu.counseling.common.util.Md5Util;
+import com.ecnu.counseling.common.result.ResultInfo;
+import com.ecnu.counseling.common.util.CheckUtils;
 import com.ecnu.counseling.counselor.mapper.CounselorMapper;
 import com.ecnu.counseling.counselor.model.po.CounselorPO;
 import com.ecnu.counseling.counselor.service.CounselorService;
@@ -29,6 +31,18 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class CounselorServiceImpl extends ServiceImpl<CounselorMapper, CounselorPO> implements CounselorService {
+
+    @Override
+    public ResultInfo<CounselorPO> detailById(Integer id) {
+        if (CheckUtils.isEmptyId(id)) {
+            return ResultInfo.error("id不合法");
+        }
+        CounselorPO po = new LambdaQueryChainWrapper<>(this.baseMapper)
+            .eq(BasePO::getId, id)
+            .last("limit 1")
+            .one();
+        return po == null ? ResultInfo.error("不存在该咨询师记录") : ResultInfo.success(po);
+    }
 
     @Override
     public ListPagingResponse<CounselorPO> list(Collection<Integer> counselorIds, Integer start, Integer length) {
@@ -107,15 +121,6 @@ public class CounselorServiceImpl extends ServiceImpl<CounselorMapper, Counselor
     }
 
     @Override
-    public ResultInfo<CounselorDTO> detailById(Integer id) {
-        if (id == null || id <= 0) {
-            return ResultInfo.error("id不存在或不合法");
-        }
-        CounselorPO po = this.getById(id);
-        return po == null ? ResultInfo.error("数据不存在") : ResultInfo.success(po.convert2DTO());
-    }
-
-    @Override
     public ResultInfo<List<CounselorDTO>> detailByIds(Collection<Integer> ids) {
         if (CollectionUtils.isEmpty(ids)) {
             return ResultInfo.success();
@@ -129,5 +134,5 @@ public class CounselorServiceImpl extends ServiceImpl<CounselorMapper, Counselor
         List<CounselorDTO> dtos = pos.stream().map(CounselorPO::convert2DTO).collect(Collectors.toList());
         return ResultInfo.success(dtos);
     }
-    
+
 }
