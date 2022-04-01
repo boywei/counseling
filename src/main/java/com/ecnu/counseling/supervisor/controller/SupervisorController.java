@@ -8,6 +8,7 @@ import com.ecnu.counseling.common.response.ListPagingResponse;
 import com.ecnu.counseling.common.response.ResponseCodeEnum;
 import com.ecnu.counseling.common.result.BaseResult;
 import com.ecnu.counseling.common.result.ResultInfo;
+import com.ecnu.counseling.common.util.UserIdUtils;
 import com.ecnu.counseling.supervisor.model.dto.SupervisorDTO;
 import com.ecnu.counseling.supervisor.model.param.SupervisorEditParam;
 import com.ecnu.counseling.supervisor.model.param.SupervisorLoginParam;
@@ -15,6 +16,8 @@ import com.ecnu.counseling.supervisor.model.param.SupervisorQueryParam;
 import com.ecnu.counseling.supervisor.model.param.SupervisorRegisterParam;
 import com.ecnu.counseling.supervisor.model.po.SupervisorPO;
 import com.ecnu.counseling.supervisor.service.SupervisorService;
+import com.ecnu.counseling.tencentcloudim.util.TencentCloudImUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -29,12 +32,15 @@ import java.util.stream.Collectors;
  * @Author wei
  * @Date 2022/3/20 10:01 下午
  */
+@Slf4j
 @RestController
 @RequestMapping("/supervisor")
 public class SupervisorController {
 
     @Autowired
     private SupervisorService supervisorService;
+    @Autowired
+    private TencentCloudImUtils tencentCloudImUtils;
 
     @PostMapping("/list")
     ListPagingResponse<SupervisorDTO> list(@RequestBody SupervisorQueryParam param) {
@@ -61,9 +67,16 @@ public class SupervisorController {
             return new EntityResponse<>(ResponseCodeEnum.FORBIDDEN, checkResult.getMessage(), null);
         }
         ResultInfo<Integer> registerInfo = supervisorService.register(registerParam);
-        return registerInfo.isRight()
-                ? new EntityResponse<>(ResponseCodeEnum.SUCCESS, BaseConstant.SUCCESS, registerInfo.getData())
-                : new EntityResponse<>(ResponseCodeEnum.FORBIDDEN, registerInfo.getMessage(), null);
+        if (!registerInfo.isRight()) {
+            return new EntityResponse<>(ResponseCodeEnum.FORBIDDEN, registerInfo.getMessage(), null);
+        }
+        // 将账号导入腾讯im
+        String userId = UserIdUtils.getSupervisorUserId(registerInfo.getData());
+        tencentCloudImUtils.accountImport(userId);
+        // 校验账号是否成功导入
+        String queryAccountResult = tencentCloudImUtils.queryAccount(Collections.singletonList(userId));
+        log.info("校验账号是否成功导入, userId = {}, resultMessage = {}", userId, queryAccountResult);
+        return new EntityResponse<>(ResponseCodeEnum.SUCCESS, BaseConstant.SUCCESS, registerInfo.getData());
     }
 
     @GetMapping("/detail/{id}")
@@ -87,15 +100,15 @@ public class SupervisorController {
     }
 
     @PostMapping("/login")
-    public BaseResponse login(@RequestBody SupervisorLoginParam param)  {
+    public EntityResponse<SupervisorDTO> login(@RequestBody SupervisorLoginParam param)  {
         BaseResult checkResult = param.checkLoginParam();
         if (!checkResult.isRight()) {
-            return new BaseResponse(ResponseCodeEnum.FORBIDDEN, checkResult.getMessage());
+            return new EntityResponse<>(ResponseCodeEnum.FORBIDDEN, checkResult.getMessage(), null);
         }
         ResultInfo<SupervisorDTO> loginResult = supervisorService.login(param);
         return loginResult.isRight()
-                ? BaseResponse.success()
-                : new BaseResponse(ResponseCodeEnum.FORBIDDEN, loginResult.getMessage());
+                ? new EntityResponse<>(ResponseCodeEnum.SUCCESS, BaseConstant.SUCCESS, loginResult.getData())
+                : new EntityResponse<>(ResponseCodeEnum.FORBIDDEN, loginResult.getMessage(), null);
     }
 
     

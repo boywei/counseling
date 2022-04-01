@@ -20,6 +20,8 @@ import lombok.experimental.SuperBuilder;
 @TableName("admin")
 public class AdminPO extends BasePO {
 
+    private String phone;
+
     private String name;
 
     private String password;
@@ -27,8 +29,8 @@ public class AdminPO extends BasePO {
     public AdminDTO convert2DTO() {
         return AdminDTO.builder()
                 .id(this.id)
+                .phone(this.phone)
                 .name(this.name)
-                .password(this.password)
                 .build();
     }
 }

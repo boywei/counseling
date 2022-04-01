@@ -18,8 +18,8 @@ public class AdminDTO {
 
     private Integer id;
 
-    private String name;
+    private String phone;
 
-    private String password;
+    private String name;
 
 }

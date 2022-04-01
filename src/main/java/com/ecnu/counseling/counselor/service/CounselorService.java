@@ -3,7 +3,6 @@ package com.ecnu.counseling.counselor.service;
 import com.ecnu.counseling.common.response.ListPagingResponse;
 import com.ecnu.counseling.common.result.BaseResult;
 import com.ecnu.counseling.common.result.ResultInfo;
-import com.ecnu.counseling.common.result.ResultInfo;
 import com.ecnu.counseling.counselor.model.po.CounselorPO;
 import com.ecnu.counseling.counselor.model.dto.CounselorDTO;
 import com.ecnu.counseling.counselor.model.param.CounselorEditParam;
@@ -24,5 +23,9 @@ public interface CounselorService {
     BaseResult edit(CounselorEditParam editParam);
 
     ResultInfo<CounselorDTO> login(CounselorLoginParam loginParam);
+
+    BaseResult allExist(Collection<Integer> ids);
+
+    ResultInfo<List<CounselorDTO>> detailByIds(Collection<Integer> ids);
 
 }

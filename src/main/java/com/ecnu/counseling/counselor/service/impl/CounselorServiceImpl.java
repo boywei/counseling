@@ -1,5 +1,7 @@
 package com.ecnu.counseling.counselor.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -10,8 +12,7 @@ import com.ecnu.counseling.common.response.ListPagingResponse;
 import com.ecnu.counseling.common.response.ResponseCodeEnum;
 import com.ecnu.counseling.common.result.BaseResult;
 import com.ecnu.counseling.common.result.ResultInfo;
-import com.ecnu.counseling.common.util.Md5Util;
-import com.ecnu.counseling.common.result.ResultInfo;
+import com.ecnu.counseling.common.util.Md5Utils;
 import com.ecnu.counseling.common.util.CheckUtils;
 import com.ecnu.counseling.counselor.mapper.CounselorMapper;
 import com.ecnu.counseling.counselor.model.po.CounselorPO;
@@ -26,9 +27,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 public class CounselorServiceImpl extends ServiceImpl<CounselorMapper, CounselorPO> implements CounselorService {
 
@@ -69,7 +72,7 @@ public class CounselorServiceImpl extends ServiceImpl<CounselorMapper, Counselor
 
         CounselorPO po = CounselorPO.builder()
                 .name(registerParam.getName())
-                .password(Md5Util.encryptPassword(registerParam.getPhone(), registerParam.getPassword()))
+                .password(Md5Utils.encryptPassword(registerParam.getPhone(), registerParam.getPassword()))
                 .phone(registerParam.getPhone())
                 .age(registerParam.getAge())
                 .gender(registerParam.getGender())
@@ -90,7 +93,7 @@ public class CounselorServiceImpl extends ServiceImpl<CounselorMapper, Counselor
     public BaseResult edit(CounselorEditParam editParam) {
         CounselorPO po = CounselorPO.builder()
                 .name(editParam.getName())
-                .password(Md5Util.encryptPassword(editParam.getPhone(), editParam.getPassword()))
+                .password(Md5Utils.encryptPassword(editParam.getPhone(), editParam.getPassword()))
                 .phone(editParam.getPhone())
                 .age(editParam.getAge())
                 .gender(editParam.getGender())
@@ -110,14 +113,34 @@ public class CounselorServiceImpl extends ServiceImpl<CounselorMapper, Counselor
 
     @Override
     public ResultInfo<CounselorDTO> login(CounselorLoginParam loginParam) {
-        List<CounselorPO> pos = new LambdaQueryChainWrapper<>(this.baseMapper)
-                .eq(CounselorPO::getPhone, loginParam.getPhone())
-                .eq(CounselorPO::getPassword, Md5Util.encryptPassword(loginParam.getPhone(), loginParam.getPassword()))
-                .list();
-        System.out.println();
+        LambdaQueryWrapper<CounselorPO> queryWrapper = Wrappers.lambdaQuery();
+        queryWrapper.eq(CounselorPO::getPhone, loginParam.getPhone());
+        Integer count = this.baseMapper.selectCount(queryWrapper);
+        if (count == 0) {
+            return ResultInfo.error("用户不存在");
+        }
+        if (count > 1) {
+            log.error("DB中存在多条相同手机号的账号，phone = {}", loginParam.getPhone());
+        }
+        queryWrapper.eq(CounselorPO::getPassword, Md5Utils.encryptPassword(loginParam.getPhone(), loginParam.getPassword()));
+        List<CounselorPO> pos = this.baseMapper.selectList(queryWrapper);
         return CollectionUtils.isEmpty(pos)
-                ? ResultInfo.error("手机号不存在或密码错误")
+                ? ResultInfo.error("密码错误，请重试！")
                 : ResultInfo.success(pos.get(0).convert2DTO());
+    }
+
+    @Override
+    public BaseResult allExist(Collection<Integer> ids) {
+        if (CheckUtils.anyEmptyIds(ids)) {
+            return BaseResult.error("ids存在非法数据");
+        }
+        if (CollectionUtils.isEmpty(ids)) {
+            return BaseResult.SUCCESS;
+        }
+        Integer count = new LambdaQueryChainWrapper<>(this.baseMapper)
+                .in(BasePO::getId, ids)
+                .count();
+        return count == CollectionUtils.size(ids) ? BaseResult.SUCCESS : BaseResult.error("部分数据不存在");
     }
 
     @Override
@@ -134,5 +157,5 @@ public class CounselorServiceImpl extends ServiceImpl<CounselorMapper, Counselor
         List<CounselorDTO> dtos = pos.stream().map(CounselorPO::convert2DTO).collect(Collectors.toList());
         return ResultInfo.success(dtos);
     }
-
+    
 }

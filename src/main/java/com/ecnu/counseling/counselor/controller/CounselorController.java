@@ -8,6 +8,7 @@ import com.ecnu.counseling.common.response.ListPagingResponse;
 import com.ecnu.counseling.common.response.ResponseCodeEnum;
 import com.ecnu.counseling.common.result.BaseResult;
 import com.ecnu.counseling.common.result.ResultInfo;
+import com.ecnu.counseling.common.util.UserIdUtils;
 import com.ecnu.counseling.counselor.model.dto.CounselorDTO;
 import com.ecnu.counseling.counselor.model.param.CounselorEditParam;
 import com.ecnu.counseling.counselor.model.param.CounselorLoginParam;
@@ -15,6 +16,8 @@ import com.ecnu.counseling.counselor.model.param.CounselorQueryParam;
 import com.ecnu.counseling.counselor.model.param.CounselorRegisterParam;
 import com.ecnu.counseling.counselor.model.po.CounselorPO;
 import com.ecnu.counseling.counselor.service.CounselorService;
+import com.ecnu.counseling.tencentcloudim.util.TencentCloudImUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -24,12 +27,15 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 @RequestMapping("/counselor")
 public class CounselorController {
 
     @Autowired
     private CounselorService counselorService;
+    @Autowired
+    private TencentCloudImUtils tencentCloudImUtils;
 
     @PostMapping("/list")
     ListPagingResponse<CounselorDTO> list(@RequestBody CounselorQueryParam param) {
@@ -56,14 +62,21 @@ public class CounselorController {
             return new EntityResponse<>(ResponseCodeEnum.FORBIDDEN, checkResult.getMessage(), null);
         }
         ResultInfo<Integer> registerInfo = counselorService.register(registerParam);
-        return registerInfo.isRight()
-                ? new EntityResponse<>(ResponseCodeEnum.SUCCESS, BaseConstant.SUCCESS, registerInfo.getData())
-                : new EntityResponse<>(ResponseCodeEnum.FORBIDDEN, registerInfo.getMessage(), null);
+        if (!registerInfo.isRight()) {
+            return new EntityResponse<>(ResponseCodeEnum.FORBIDDEN, registerInfo.getMessage(), null);
+        }
+        // 将账号导入腾讯im
+        String userId = UserIdUtils.getCounselorUserId(registerInfo.getData());
+        tencentCloudImUtils.accountImport(userId);
+        // 校验账号是否成功导入
+        String queryAccountResult = tencentCloudImUtils.queryAccount(Collections.singletonList(userId));
+        log.info("校验账号是否成功导入, userId = {}, resultMessage = {}", userId, queryAccountResult);
+        return new EntityResponse<>(ResponseCodeEnum.SUCCESS, BaseConstant.SUCCESS, registerInfo.getData());
     }
 
     @GetMapping("/detail/{id}")
-    public EntityResponse<CounselorDTO> detail(@PathVariable("id") Integer id) {
-        ResultInfo<CounselorDTO> resultInfo = counselorService.detailById(id);
+    public EntityResponse<CounselorPO> detail(@PathVariable("id") Integer id) {
+        ResultInfo<CounselorPO> resultInfo = counselorService.detailById(id);
         return resultInfo.isRight()
                 ? new EntityResponse<>(ResponseCodeEnum.SUCCESS, BaseConstant.SUCCESS, resultInfo.getData())
                 : new EntityResponse<>(ResponseCodeEnum.FORBIDDEN, resultInfo.getMessage(), null);
@@ -82,15 +95,15 @@ public class CounselorController {
     }
 
     @PostMapping("/login")
-    public BaseResponse login(@RequestBody CounselorLoginParam param)  {
+    public EntityResponse<CounselorDTO> login(@RequestBody CounselorLoginParam param)  {
         BaseResult checkResult = param.checkLoginParam();
         if (!checkResult.isRight()) {
-            return new BaseResponse(ResponseCodeEnum.FORBIDDEN, checkResult.getMessage());
+            return new EntityResponse<>(ResponseCodeEnum.FORBIDDEN, checkResult.getMessage(), null);
         }
         ResultInfo<CounselorDTO> loginResult = counselorService.login(param);
         return loginResult.isRight()
-                ? BaseResponse.success()
-                : new BaseResponse(ResponseCodeEnum.FORBIDDEN, loginResult.getMessage());
+                ? new EntityResponse<>(ResponseCodeEnum.SUCCESS, BaseConstant.SUCCESS, loginResult.getData())
+                : new EntityResponse<>(ResponseCodeEnum.FORBIDDEN, loginResult.getMessage(), null);
     }
 
 }

@@ -7,6 +7,7 @@ public class UserConstant {
      */
     public static final String CALLER_PREFIX = "caller_";
     public static final String COUNSELOR_PREFIX = "counselor_";
+    public static final String SUPERVISOR_PREFIX = "supervisor_";
 
     /**
      * 姓名长度限制

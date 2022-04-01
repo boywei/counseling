@@ -31,5 +31,6 @@ public interface SupervisorService {
     ResultInfo<SupervisorDTO> detailById(Integer id);
 
     ResultInfo<List<SupervisorDTO>> detailByIds(Collection<Integer> ids);
-    
+
+    BaseResult allExist(Collection<Integer> ids);
 }

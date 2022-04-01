@@ -17,4 +17,18 @@ public class UserIdUtils {
         return UserConstant.CALLER_PREFIX + id;
     }
 
+    public static String getCounselorUserId(Integer id) {
+        if (CheckUtils.isEmptyId(id)) {
+            throw new IllegalArgumentException("id非法");
+        }
+        return UserConstant.COUNSELOR_PREFIX + id;
+    }
+
+    public static String getSupervisorUserId(Integer id) {
+        if (CheckUtils.isEmptyId(id)) {
+            throw new IllegalArgumentException("id非法");
+        }
+        return UserConstant.SUPERVISOR_PREFIX + id;
+    }
+
 }
