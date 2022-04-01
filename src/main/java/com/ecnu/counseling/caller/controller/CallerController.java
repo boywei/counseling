@@ -11,6 +11,7 @@ import com.ecnu.counseling.common.response.EntityResponse;
 import com.ecnu.counseling.common.response.ResponseCodeEnum;
 import com.ecnu.counseling.common.result.BaseResult;
 import com.ecnu.counseling.common.result.ResultInfo;
+import com.ecnu.counseling.common.util.UserIdUtils;
 import com.ecnu.counseling.tencentcloudim.util.TencentCloudImUtils;
 import java.util.Collections;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +45,7 @@ public class CallerController {
             return new EntityResponse<>(ResponseCodeEnum.FORBIDDEN, registerInfo.getMessage(), null);
         }
         // 将账号导入腾讯im
-        String userId = registerInfo.getData().toString();
+        String userId = UserIdUtils.getCallerUseId(registerInfo.getData());
         tencentCloudImUtils.accountImport(userId);
         // 校验账号是否成功导入
         String queryAccountResult = tencentCloudImUtils.queryAccount(Collections.singletonList(userId));
@@ -73,15 +74,15 @@ public class CallerController {
     }
 
     @PostMapping("/login")
-    public BaseResponse login(@RequestBody CallerLoginParam param) {
+    public EntityResponse<Integer> login(@RequestBody CallerLoginParam param) {
         BaseResult checkResult = param.checkLoginParam();
         if (!checkResult.isRight()) {
-            return new BaseResponse(ResponseCodeEnum.FORBIDDEN, checkResult.getMessage());
+            return new EntityResponse<>(ResponseCodeEnum.FORBIDDEN, checkResult.getMessage(), null);
         }
         ResultInfo<CallerDTO> loginResult = callerService.login(param);
         return loginResult.isRight()
-            ? BaseResponse.success()
-            : new BaseResponse(ResponseCodeEnum.FORBIDDEN, loginResult.getMessage());
+            ? new EntityResponse<>(ResponseCodeEnum.SUCCESS, BaseConstant.SUCCESS, loginResult.getData().getId())
+            : new EntityResponse<>(ResponseCodeEnum.FORBIDDEN, loginResult.getMessage(), null);
     }
 
 

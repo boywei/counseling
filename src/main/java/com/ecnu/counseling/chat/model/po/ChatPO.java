@@ -42,7 +42,7 @@ public class ChatPO extends BasePO {
             .callerId(this.callerId)
             .counselorId(this.counselorId)
             .startTime(LocalDateTimeUtils.getTimeStampMilli(this.startTime))
-            .endTime(LocalDateTimeUtils.getTimeStampMilli(this.endTime))
+            .endTime(this.endTime == null ? null : LocalDateTimeUtils.getTimeStampMilli(this.endTime))
             .score(this.score)
             .commentCaller(this.commentCaller)
             .commentCounselor(this.commentCounselor)

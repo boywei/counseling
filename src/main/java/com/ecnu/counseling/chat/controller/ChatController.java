@@ -1,6 +1,5 @@
 package com.ecnu.counseling.chat.controller;
 
-import com.baomidou.mybatisplus.extension.api.R;
 import com.ecnu.counseling.caller.model.dto.CallerDTO;
 import com.ecnu.counseling.caller.service.CallerService;
 import com.ecnu.counseling.chat.model.dto.ChatDTO;
@@ -8,13 +7,12 @@ import com.ecnu.counseling.chat.model.dto.ChatMessageDetailDTO;
 import com.ecnu.counseling.chat.model.dto.ChatRecordDTO;
 import com.ecnu.counseling.chat.model.dto.MessageDTO;
 import com.ecnu.counseling.chat.model.param.AppraiseChatParam;
-import com.ecnu.counseling.chat.model.param.CreateChatParam;
 import com.ecnu.counseling.chat.model.param.ChatRecordDetailQueryParam;
 import com.ecnu.counseling.chat.model.param.ChatRecordListQueryParam;
+import com.ecnu.counseling.chat.model.param.CreateChatParam;
 import com.ecnu.counseling.chat.model.param.FinishChatParam;
 import com.ecnu.counseling.chat.model.param.ReceiveMessageParam;
 import com.ecnu.counseling.chat.model.param.SendMessageParam;
-import com.ecnu.counseling.chat.model.po.ChatPO;
 import com.ecnu.counseling.chat.service.ChatService;
 import com.ecnu.counseling.chat.service.MessageService;
 import com.ecnu.counseling.common.constant.BaseConstant;
@@ -26,17 +24,17 @@ import com.ecnu.counseling.common.response.ListPagingResponse;
 import com.ecnu.counseling.common.response.ResponseCodeEnum;
 import com.ecnu.counseling.common.result.BaseResult;
 import com.ecnu.counseling.common.result.ResultInfo;
+import com.ecnu.counseling.common.util.JsonUtils;
 import com.ecnu.counseling.common.util.NumberUtils;
+import com.ecnu.counseling.common.util.UserIdUtils;
 import com.ecnu.counseling.counselor.model.dto.CounselorDTO;
 import com.ecnu.counseling.counselor.model.po.CounselorPO;
 import com.ecnu.counseling.counselor.service.CounselorService;
 import com.ecnu.counseling.tencentcloudim.enumeration.MessageTypeEnum;
 import com.ecnu.counseling.tencentcloudim.response.IMReceiveMessageResponse;
 import com.ecnu.counseling.tencentcloudim.response.IMSendMessageResponse;
-import com.ecnu.counseling.common.util.JsonUtils;
 import com.ecnu.counseling.tencentcloudim.util.TencentCloudImUtils;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -128,8 +126,8 @@ public class ChatController {
             return new EntityResponse<>(ResponseCodeEnum.FORBIDDEN, "会话记录不存在", null);
         }
         try {
-            String sendMessageResult = tencentCloudImUtils.sendMsg(Objects.isNull(sendMessageParam.getSyncOtherMachine()) ? 0 : sendMessageParam.getSyncOtherMachine(),
-                fromUserId.toString(), toUserId.toString(), MessageTypeEnum.parseById(sendMessageParam.getMsgType()).getImMessageType(),
+            String sendMessageResult = tencentCloudImUtils.sendMsg(Objects.isNull(sendMessageParam.getSyncOtherMachine()) ? 1 : sendMessageParam.getSyncOtherMachine(),
+                UserIdUtils.getCallerUseId(fromUserId), UserIdUtils.getCallerUseId(toUserId), MessageTypeEnum.parseById(sendMessageParam.getMsgType()).getImMessageType(),
                 StringUtils.defaultString(sendMessageParam.getMsgContent()));
             log.info("{} -> {}发送消息结果：{}", fromUserId, toUserId, sendMessageResult);
             Optional<IMSendMessageResponse> optional = JsonUtils.readValue(sendMessageResult, IMSendMessageResponse.class);
@@ -156,7 +154,7 @@ public class ChatController {
             return new EntityResponse<>(ResponseCodeEnum.FORBIDDEN, baseResult.getMessage(), null);
         }
         try {
-            String queryMessageResult = tencentCloudImUtils.adminGetRoamMsg(fromUserId.toString(), toUserId.toString(),
+            String queryMessageResult = tencentCloudImUtils.adminGetRoamMsg(UserIdUtils.getCallerUseId(fromUserId), UserIdUtils.getCallerUseId(toUserId),
                 NumberUtils.ifNullUseZero(receiveMessageParam.getCount()), receiveMessageParam.getStartTime(),
                 receiveMessageParam.getEndTime(), receiveMessageParam.getLastMsgKey());
             log.info("接收消息结果：{}", queryMessageResult);

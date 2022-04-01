@@ -3,6 +3,12 @@ package com.ecnu.counseling.common.constant;
 public class UserConstant {
 
     /**
+     * IM账号前缀
+     */
+    public static final String CALLER_PREFIX = "caller_";
+    public static final String COUNSELOR_PREFIX = "counselor_";
+
+    /**
      * 姓名长度限制
      */
     public static final int NAME_MIN_LENGTH = 2;
