@@ -3,6 +3,7 @@ package com.ecnu.counseling.help.model.po;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.ecnu.counseling.help.model.dto.HelpDTO;
 import com.ecnu.counseling.common.model.po.BasePO;
+import com.ecnu.counseling.common.util.LocalDateTimeUtils;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import lombok.AllArgsConstructor;
@@ -10,11 +11,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-/**
- * @Description
- * @Author wei
- * @Date 2022/3/21 12:54 上午
- */
 @Data
 @SuperBuilder
 @AllArgsConstructor
@@ -26,17 +22,18 @@ public class HelpPO extends BasePO {
 
     private Integer counselorId;
 
-    private LocalDateTime helpTime;
+    private LocalDateTime startTime;
 
-    private Integer duration;
+    private LocalDateTime endTime;
 
     public HelpDTO convert2DTO() {
         return HelpDTO.builder()
                 .id(super.id)
-                .counselorId(this.supervisorId)
-                .supervisorId(this.counselorId)
-                .helpTime(this.helpTime.toEpochSecond(ZoneOffset.ofHours(8)))
-                .duration(this.duration)
+                .supervisorId(this.supervisorId)
+                .counselorId(this.counselorId)
+                .startTime(LocalDateTimeUtils.getTimeStampMilli(this.startTime))
+                .endTime(this.endTime == null ? null : LocalDateTimeUtils.getTimeStampMilli(this.endTime))
+
                 .build();
     }
 }

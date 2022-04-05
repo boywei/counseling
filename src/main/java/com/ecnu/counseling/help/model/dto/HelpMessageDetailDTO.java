@@ -1,16 +1,14 @@
 package com.ecnu.counseling.help.model.dto;
 
-import com.ecnu.counseling.help.model.dto.RecordDTO;
-import com.ecnu.counseling.help.model.po.RecordPO;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.time.ZoneOffset;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @Description 一条聊天记录

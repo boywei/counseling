@@ -57,7 +57,7 @@ public class ChatServiceImpl extends ServiceImpl<ChatMapper, ChatPO> implements 
         boolean update = new LambdaUpdateChainWrapper<>(this.baseMapper)
             .eq(BasePO::getId, finishChatParam.getChatId())
             .isNull(ChatPO::getEndTime)
-            .set(ChatPO::getEndTime, LocalDateTimeUtils.getDateTimeOfSecond(finishChatParam.getEndTime()))
+            .set(ChatPO::getEndTime, LocalDateTimeUtils.getDateTimeOfTimestamp(finishChatParam.getEndTime()))
             .update();
         return update ? BaseResult.SUCCESS : BaseResult.error("不存在该会话记录或者该会话已结束");
     }

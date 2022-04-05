@@ -6,11 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * @Description
- * @Author wei
- * @Date 2022/3/21 1:07 上午
- */
 @Data
 @Builder
 @AllArgsConstructor
@@ -23,8 +18,8 @@ public class HelpDTO {
 
     private Integer counselorId;
 
-    private Long helpTime;
+    private Long startTime;
 
-    private Integer duration;
+    private Long endTime;
 
 }
