@@ -1,8 +1,9 @@
 package com.ecnu.counseling.chat.controller;
 
-import com.baomidou.mybatisplus.extension.api.R;
 import com.ecnu.counseling.caller.model.dto.CallerDTO;
 import com.ecnu.counseling.caller.model.param.AccountParam;
+import com.ecnu.counseling.chat.model.param.AllUnreadDetailQueryParam;
+import com.ecnu.counseling.chat.model.param.MessageSetReadParam;
 import com.ecnu.counseling.caller.service.CallerService;
 import com.ecnu.counseling.chat.model.dto.ChatDTO;
 import com.ecnu.counseling.chat.model.dto.ChatMessageDetailDTO;
@@ -36,9 +37,9 @@ import com.ecnu.counseling.counselor.service.CounselorService;
 import com.ecnu.counseling.tencentcloudim.enumeration.MessageTypeEnum;
 import com.ecnu.counseling.tencentcloudim.response.IMReceiveMessageResponse;
 import com.ecnu.counseling.tencentcloudim.response.IMSendMessageResponse;
+import com.ecnu.counseling.tencentcloudim.response.UnreadNumResult;
 import com.ecnu.counseling.tencentcloudim.util.RedisServiceUtils;
 import com.ecnu.counseling.tencentcloudim.util.TencentCloudImUtils;
-import com.google.common.collect.Lists;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -322,6 +323,52 @@ public class ChatController {
         List<ChatMessageDetailDTO> detailDTOS = relatedMessagePOS.stream().map(e -> ChatMessageDetailDTO.valueOf(e, relatedMessageMap)).collect(Collectors.toList());
         return new ListPagingResponse<>(ResponseCodeEnum.SUCCESS, BaseConstant.SUCCESS, detailDTOS, queryParam.getStart(), queryParam.getLength(),
             messagesPagingResult.getRecordsTotal());
+    }
+
+    /**
+     * 设置消息已读
+     *
+     * @param messageSetReadParam
+     * @return
+     */
+    @PutMapping("/setRead")
+    BaseResponse setMessageRead(@RequestBody @Valid MessageSetReadParam messageSetReadParam) {
+        Integer reportId = messageSetReadParam.getReport().getAccountId();
+        Integer peerId = messageSetReadParam.getPeer().getAccountId();
+        // TODO: 校验双方id是否存在
+        try {
+            tencentCloudImUtils.adminSetMsgRead(UserIdUtils.getUserId(messageSetReadParam.getReport()), UserIdUtils.getUserId(messageSetReadParam.getPeer()));
+            return BaseResponse.success();
+        } catch (Exception e) {
+            log.error("设置消息已读失败", e);
+            return new BaseResponse(ResponseCodeEnum.FORBIDDEN, e.getMessage());
+        }
+    }
+
+    /**
+     * 查询本账号下所有未读消息详情
+     *
+     * @param queryParam
+     * @return
+     */
+    @GetMapping("/unread/all")
+    EntityResponse<UnreadNumResult> queryAllUnreadDetail(@RequestBody @Valid AllUnreadDetailQueryParam queryParam) {
+        try {
+            AccountParam userAccount = queryParam.getUserAccount();
+            List<String> peerAccounts = ListUtils.emptyIfNull(queryParam.getPeerAccounts()).stream()
+                .map(e -> UserIdUtils.getUserId(e))
+                .collect(Collectors.toList());
+            String result = tencentCloudImUtils.getAllUnreadNum(UserIdUtils.getUserId(userAccount), peerAccounts);
+            Optional<UnreadNumResult> optional = JsonUtils.readValue(result, UnreadNumResult.class);
+            if (!optional.isPresent()) {
+                log.error("本账号下所有未读消息数量查询失败, result = {}", result);
+            }
+            UnreadNumResult unreadNumResult = optional.get();
+            return new EntityResponse<>(ResponseCodeEnum.SUCCESS, BaseConstant.SUCCESS, unreadNumResult);
+        } catch (Exception e) {
+            log.error("本账号下所有未读消息数量查询失败", e);
+            return new EntityResponse<>(ResponseCodeEnum.FORBIDDEN, e.getMessage(), null);
+        }
     }
 
 }
