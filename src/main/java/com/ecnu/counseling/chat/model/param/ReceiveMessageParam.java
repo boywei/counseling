@@ -1,5 +1,6 @@
 package com.ecnu.counseling.chat.model.param;
 
+import com.ecnu.counseling.caller.model.param.AccountParam;
 import com.ecnu.counseling.common.model.param.PagingParam;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -14,16 +15,21 @@ import lombok.NoArgsConstructor;
 public class ReceiveMessageParam {
 
     /**
+     * 会话记录id
+     */
+    private Integer chatId;
+
+    /**
      * 发送者
      */
-    @NotNull(message = "发送者id不可为空")
-    private Integer fromUserId;
+    @NotNull(message = "发送者账号不可为空")
+    private AccountParam fromUser;
 
     /**
      * 接收者
      */
-    @NotNull(message = "接收者id不可为空")
-    private Integer toUserId;
+    @NotNull(message = "接收者账号不可为空")
+    private AccountParam toUser;
 
     /**
      * 查询数量

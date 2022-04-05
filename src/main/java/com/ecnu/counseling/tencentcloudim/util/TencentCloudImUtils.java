@@ -6,6 +6,7 @@ import com.ecnu.counseling.tencentcloudim.constant.ImConstant;
 import com.tencentyun.TLSSigAPIv2;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomUtils;
@@ -39,7 +40,7 @@ public class TencentCloudImUtils {
         if (StringUtils.isEmpty(userSig)) {
             TLSSigAPIv2 tlsSigApi = new TLSSigAPIv2(sdkAppId, key);
             userSig = tlsSigApi.genUserSig(APP_MANAGER, 86400);
-            redisServiceUtils.set(REDIS_IM_USER_SIG + APP_MANAGER, userSig, 86400L);
+            redisServiceUtils.set(REDIS_IM_USER_SIG + APP_MANAGER, userSig, 24L, TimeUnit.HOURS);
         }
         return userSig;
     }

@@ -42,12 +42,34 @@ public class RedisServiceUtils {
      * @param value
      * @return
      */
-    public boolean set(final String key, Object value, Long expireTime) {
+    public boolean set(final String key, Object value, Long expireTime, TimeUnit timeUnit) {
         boolean result = false;
         try {
             ValueOperations<Serializable, Object> operations = redisTemplate.opsForValue();
             operations.set(key, value);
-            redisTemplate.expire(key, expireTime, TimeUnit.SECONDS);
+            redisTemplate.expire(key, expireTime, timeUnit);
+            result = true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    /**
+     * 不存在则写入
+     *
+     * @param key
+     * @param value
+     * @param expireTime
+     * @param timeUnit
+     * @return
+     */
+    public boolean setIfAbsent(final String key, Object value, Long expireTime, TimeUnit timeUnit) {
+        boolean result = false;
+        try {
+            ValueOperations<Serializable, Object> operations = redisTemplate.opsForValue();
+            operations.setIfAbsent(key, value);
+            redisTemplate.expire(key, expireTime, timeUnit);
             result = true;
         } catch (Exception e) {
             e.printStackTrace();
