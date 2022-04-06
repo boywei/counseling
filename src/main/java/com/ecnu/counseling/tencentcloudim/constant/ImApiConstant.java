@@ -63,6 +63,11 @@ public class ImApiConstant {
          * 设置单聊消息已读
          */
         public static final String ADMIN_SET_MSG_READ = "v4/openim/admin_set_msg_read";
+
+        /**
+         * 获取所有未读消息数量
+         */
+        public static final String GET_C2C_UNREAD_MSG_NUM = "v4/openim/get_c2c_unread_msg_num";
     }
 
     /**

@@ -5,9 +5,12 @@ import com.ecnu.counseling.tencentcloudim.constant.ImApiConstant;
 import com.ecnu.counseling.tencentcloudim.constant.ImConstant;
 import com.tencentyun.TLSSigAPIv2;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +42,7 @@ public class TencentCloudImUtils {
         if (StringUtils.isEmpty(userSig)) {
             TLSSigAPIv2 tlsSigApi = new TLSSigAPIv2(sdkAppId, key);
             userSig = tlsSigApi.genUserSig(APP_MANAGER, 86400);
-            redisServiceUtils.set(REDIS_IM_USER_SIG + APP_MANAGER, userSig, 86400L);
+            redisServiceUtils.set(REDIS_IM_USER_SIG + APP_MANAGER, userSig, 24L, TimeUnit.HOURS);
         }
         return userSig;
     }
@@ -282,5 +285,25 @@ public class TencentCloudImUtils {
         log.info("腾讯云im设置单聊消息已读，请求参数：{}", jsonObject.toString());
         String result = HttpUtils.doPost2(httpsUrl, jsonObject);
         log.info("腾讯云im设置单聊消息已读，返回结果：{}", result);
+    }
+
+    /**
+     * 查询本账号下所有未读消息数量或详情
+     *
+     * @param toAccountId
+     * @return
+     */
+    public String getAllUnreadNum(String toAccountId, Collection<String> peerAccountIds) {
+        Integer random = RandomUtils.nextInt(0, 999999999);
+        String url = getHttpsUrl(ImApiConstant.SingleChatManage.GET_C2C_UNREAD_MSG_NUM, random);
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("To_Account", toAccountId);
+        if (CollectionUtils.isNotEmpty(peerAccountIds)) {
+            jsonObject.put("Peer_Account", peerAccountIds);
+        }
+        log.info("腾讯云im获取所有未读消息数量，请求参数：{}", jsonObject);
+        String result = HttpUtils.doPost2(url, jsonObject);
+        log.info("腾讯云im获取所有未读消息数量，响应参数：{}", result);
+        return result;
     }
 }

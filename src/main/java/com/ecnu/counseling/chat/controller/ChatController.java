@@ -1,6 +1,9 @@
 package com.ecnu.counseling.chat.controller;
 
 import com.ecnu.counseling.caller.model.dto.CallerDTO;
+import com.ecnu.counseling.caller.model.param.AccountParam;
+import com.ecnu.counseling.chat.model.param.AllUnreadDetailQueryParam;
+import com.ecnu.counseling.chat.model.param.MessageSetReadParam;
 import com.ecnu.counseling.caller.service.CallerService;
 import com.ecnu.counseling.chat.model.dto.ChatDTO;
 import com.ecnu.counseling.chat.model.dto.ChatMessageDetailDTO;
@@ -16,6 +19,7 @@ import com.ecnu.counseling.chat.model.param.SendMessageParam;
 import com.ecnu.counseling.chat.service.ChatService;
 import com.ecnu.counseling.chat.service.MessageService;
 import com.ecnu.counseling.common.constant.BaseConstant;
+import com.ecnu.counseling.common.model.enumeration.IdentityEnum;
 import com.ecnu.counseling.common.model.param.PagingParam;
 import com.ecnu.counseling.common.model.po.BasePO;
 import com.ecnu.counseling.common.response.BaseResponse;
@@ -33,14 +37,16 @@ import com.ecnu.counseling.counselor.service.CounselorService;
 import com.ecnu.counseling.tencentcloudim.enumeration.MessageTypeEnum;
 import com.ecnu.counseling.tencentcloudim.response.IMReceiveMessageResponse;
 import com.ecnu.counseling.tencentcloudim.response.IMSendMessageResponse;
+import com.ecnu.counseling.tencentcloudim.response.UnreadNumResult;
+import com.ecnu.counseling.tencentcloudim.util.RedisServiceUtils;
 import com.ecnu.counseling.tencentcloudim.util.TencentCloudImUtils;
-import com.google.common.collect.Lists;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
@@ -49,6 +55,7 @@ import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.ListUtils;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -74,6 +81,8 @@ public class ChatController {
     private MessageService messageService;
     @Autowired
     private TencentCloudImUtils tencentCloudImUtils;
+    @Autowired
+    private RedisServiceUtils redisServiceUtils;
 
     @PostMapping("/begin")
     EntityResponse<Integer> createChat(@RequestBody @Valid CreateChatParam createChatParam) {
@@ -89,6 +98,8 @@ public class ChatController {
         if (!resultInfo.isRight()) {
             return new EntityResponse<>(ResponseCodeEnum.FORBIDDEN, resultInfo.getMessage(), null);
         }
+        // 添加缓存
+        redisServiceUtils.set(UserIdUtils.getChatRecordRedisKey(resultInfo.getData()), true);
         return new EntityResponse<>(ResponseCodeEnum.SUCCESS, BaseConstant.SUCCESS, resultInfo.getData());
     }
 
@@ -98,6 +109,8 @@ public class ChatController {
         if (!finishResult.isRight()) {
             return new BaseResponse(ResponseCodeEnum.FORBIDDEN, finishResult.getMessage());
         }
+        // 删除缓存
+        redisServiceUtils.set(UserIdUtils.getChatRecordRedisKey(finishChatParam.getChatId()), false);
         return BaseResponse.success();
     }
 
@@ -115,21 +128,21 @@ public class ChatController {
 
     @PostMapping("/send")
     EntityResponse<IMSendMessageResponse> sendMessage(@RequestBody @Valid SendMessageParam sendMessageParam) {
-        Integer fromUserId = sendMessageParam.getFromUserId();
-        Integer toUserId = sendMessageParam.getToUserId();
-        BaseResult baseResult = callerService.allExist(Lists.newArrayList(fromUserId, toUserId));
+        AccountParam fromUser = sendMessageParam.getFromUser();
+        AccountParam toUser = sendMessageParam.getToUser();
+        BaseResult baseResult = this.accountIdAllExist(fromUser, toUser);
         if (!baseResult.isRight()) {
             return new EntityResponse<>(ResponseCodeEnum.FORBIDDEN, baseResult.getMessage(), null);
         }
-        ChatDTO chatDTO = chatService.queryById(sendMessageParam.getChatId());
-        if (chatDTO == null) {
-            return new EntityResponse<>(ResponseCodeEnum.FORBIDDEN, "会话记录不存在", null);
+        BaseResult chatExistResult = this.chatRecordExist(sendMessageParam.getChatId());
+        if (!chatExistResult.isRight()) {
+            return new EntityResponse<>(ResponseCodeEnum.FORBIDDEN, chatExistResult.getMessage(), null);
         }
         try {
             String sendMessageResult = tencentCloudImUtils.sendMsg(Objects.isNull(sendMessageParam.getSyncOtherMachine()) ? 1 : sendMessageParam.getSyncOtherMachine(),
-                UserIdUtils.getCallerUseId(fromUserId), UserIdUtils.getCallerUseId(toUserId), MessageTypeEnum.parseById(sendMessageParam.getMsgType()).getImMessageType(),
+                UserIdUtils.getUserId(fromUser), UserIdUtils.getUserId(toUser), MessageTypeEnum.parseById(sendMessageParam.getMsgType()).getImMessageType(),
                 StringUtils.defaultString(sendMessageParam.getMsgContent()));
-            log.info("{} -> {}发送消息结果：{}", fromUserId, toUserId, sendMessageResult);
+            log.info("{} -> {}发送消息结果：{}", fromUser.getAccountId(), toUser.getAccountId(), sendMessageResult);
             Optional<IMSendMessageResponse> optional = JsonUtils.readValue(sendMessageResult, IMSendMessageResponse.class);
             if (!optional.isPresent()) {
                 log.error("IM发送消息响应参数格式解析错误, sendMessageResult = {}", sendMessageResult);
@@ -145,16 +158,100 @@ public class ChatController {
         }
     }
 
+    /**
+     * 双方账号校验
+     *
+     * @param one
+     * @param two
+     * @return
+     */
+    private BaseResult accountIdAllExist(AccountParam one, AccountParam two) {
+        BaseResult baseResult = this.accountIdExist(one);
+        return baseResult.isRight() ? this.accountIdExist(two) : baseResult;
+    }
+
+    /**
+     * 检验账号是否存在
+     *
+     * @param accountParam
+     * @return
+     */
+    private BaseResult accountIdExist(AccountParam accountParam) {
+        Integer accountId = accountParam.getAccountId();
+        IdentityEnum identityEnum = IdentityEnum.parseById(accountParam.getAccountIdentity());
+
+        // 先检查缓存
+        String userIdRedisKey = UserIdUtils.getUserIdRedisKey(accountParam);
+        Object redisValue = redisServiceUtils.get(userIdRedisKey);
+        // 缓存存在且为true
+        if (redisValue != null && BooleanUtils.isTrue((Boolean) redisValue)) {
+            return BaseResult.SUCCESS;
+        }
+        // 缓存存在且为false(已删除)
+        if (redisValue != null && BooleanUtils.isFalse((Boolean) redisValue)) {
+            return BaseResult.error("账号已删除");
+        }
+
+        BaseResult baseResult = BaseResult.error("账号不存在");
+        if (identityEnum == IdentityEnum.ADMINISTRATOR) {
+            //TODO
+        } else if (identityEnum == IdentityEnum.CALLER) {
+            baseResult = callerService.allExist(Collections.singleton(accountId));
+        } else if (identityEnum == IdentityEnum.COUNSELOR) {
+            //TODO
+        } else if (identityEnum == IdentityEnum.SUPERVISOR) {
+            //TODO
+        }
+
+        if (baseResult != null && baseResult.isRight()) {
+            // 账号缓存24小时
+            redisServiceUtils.setIfAbsent(userIdRedisKey, true, 24L, TimeUnit.HOURS);
+            return BaseResult.SUCCESS;
+        }
+        return BaseResult.error("身份类型错误");
+    }
+
+    /**
+     * 检验会话记录是否存在
+     *
+     * @param chatId
+     * @return
+     */
+    private BaseResult chatRecordExist(Integer chatId) {
+        String chatRecordRedisKey = UserIdUtils.getChatRecordRedisKey(chatId);
+        Object value = redisServiceUtils.get(chatRecordRedisKey);
+        // 缓存存在且为true
+        if (value != null && BooleanUtils.isTrue((Boolean) value)) {
+            return BaseResult.SUCCESS;
+        }
+        // 缓存存在且为false(已删除)
+        if (value != null && BooleanUtils.isFalse((Boolean) value)) {
+            return BaseResult.error("会话记录已结束");
+        }
+        ChatDTO chatDTO = chatService.queryById(chatId);
+        if (chatDTO == null) {
+            redisServiceUtils.setIfAbsent(chatRecordRedisKey, false, 30L, TimeUnit.SECONDS);
+            return BaseResult.error("会话记录不存在");
+        }
+        // 会话记录存在 缓存30分钟
+        redisServiceUtils.setIfAbsent(chatRecordRedisKey, true, 30L, TimeUnit.SECONDS);
+        return BaseResult.SUCCESS;
+    }
+
     @PostMapping("/receive")
     EntityResponse<IMReceiveMessageResponse> queryMessage(@RequestBody @Valid ReceiveMessageParam receiveMessageParam) {
-        Integer fromUserId = receiveMessageParam.getFromUserId();
-        Integer toUserId = receiveMessageParam.getToUserId();
-        BaseResult baseResult = callerService.allExist(Lists.newArrayList(fromUserId, toUserId));
+        AccountParam fromUser = receiveMessageParam.getFromUser();
+        AccountParam toUser = receiveMessageParam.getToUser();
+        BaseResult baseResult = this.accountIdAllExist(fromUser, toUser);
         if (!baseResult.isRight()) {
             return new EntityResponse<>(ResponseCodeEnum.FORBIDDEN, baseResult.getMessage(), null);
         }
+        BaseResult chatRecordExist = this.chatRecordExist(receiveMessageParam.getChatId());
+        if (!chatRecordExist.isRight()) {
+            return new EntityResponse<>(ResponseCodeEnum.FORBIDDEN, chatRecordExist.getMessage(), null);
+        }
         try {
-            String queryMessageResult = tencentCloudImUtils.adminGetRoamMsg(UserIdUtils.getCallerUseId(fromUserId), UserIdUtils.getCallerUseId(toUserId),
+            String queryMessageResult = tencentCloudImUtils.adminGetRoamMsg(UserIdUtils.getUserId(fromUser), UserIdUtils.getUserId(toUser),
                 NumberUtils.ifNullUseZero(receiveMessageParam.getCount()), receiveMessageParam.getStartTime(),
                 receiveMessageParam.getEndTime(), receiveMessageParam.getLastMsgKey());
             log.info("接收消息结果：{}", queryMessageResult);
@@ -226,6 +323,52 @@ public class ChatController {
         List<ChatMessageDetailDTO> detailDTOS = relatedMessagePOS.stream().map(e -> ChatMessageDetailDTO.valueOf(e, relatedMessageMap)).collect(Collectors.toList());
         return new ListPagingResponse<>(ResponseCodeEnum.SUCCESS, BaseConstant.SUCCESS, detailDTOS, queryParam.getStart(), queryParam.getLength(),
             messagesPagingResult.getRecordsTotal());
+    }
+
+    /**
+     * 设置消息已读
+     *
+     * @param messageSetReadParam
+     * @return
+     */
+    @PutMapping("/setRead")
+    BaseResponse setMessageRead(@RequestBody @Valid MessageSetReadParam messageSetReadParam) {
+        Integer reportId = messageSetReadParam.getReport().getAccountId();
+        Integer peerId = messageSetReadParam.getPeer().getAccountId();
+        // TODO: 校验双方id是否存在
+        try {
+            tencentCloudImUtils.adminSetMsgRead(UserIdUtils.getUserId(messageSetReadParam.getReport()), UserIdUtils.getUserId(messageSetReadParam.getPeer()));
+            return BaseResponse.success();
+        } catch (Exception e) {
+            log.error("设置消息已读失败", e);
+            return new BaseResponse(ResponseCodeEnum.FORBIDDEN, e.getMessage());
+        }
+    }
+
+    /**
+     * 查询本账号下所有未读消息详情
+     *
+     * @param queryParam
+     * @return
+     */
+    @GetMapping("/unread/all")
+    EntityResponse<UnreadNumResult> queryAllUnreadDetail(@RequestBody @Valid AllUnreadDetailQueryParam queryParam) {
+        try {
+            AccountParam userAccount = queryParam.getUserAccount();
+            List<String> peerAccounts = ListUtils.emptyIfNull(queryParam.getPeerAccounts()).stream()
+                .map(e -> UserIdUtils.getUserId(e))
+                .collect(Collectors.toList());
+            String result = tencentCloudImUtils.getAllUnreadNum(UserIdUtils.getUserId(userAccount), peerAccounts);
+            Optional<UnreadNumResult> optional = JsonUtils.readValue(result, UnreadNumResult.class);
+            if (!optional.isPresent()) {
+                log.error("本账号下所有未读消息数量查询失败, result = {}", result);
+            }
+            UnreadNumResult unreadNumResult = optional.get();
+            return new EntityResponse<>(ResponseCodeEnum.SUCCESS, BaseConstant.SUCCESS, unreadNumResult);
+        } catch (Exception e) {
+            log.error("本账号下所有未读消息数量查询失败", e);
+            return new EntityResponse<>(ResponseCodeEnum.FORBIDDEN, e.getMessage(), null);
+        }
     }
 
 }
