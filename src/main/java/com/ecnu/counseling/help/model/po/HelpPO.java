@@ -33,7 +33,6 @@ public class HelpPO extends BasePO {
                 .counselorId(this.counselorId)
                 .startTime(LocalDateTimeUtils.getTimeStampMilli(this.startTime))
                 .endTime(this.endTime == null ? null : LocalDateTimeUtils.getTimeStampMilli(this.endTime))
-
                 .build();
     }
 }

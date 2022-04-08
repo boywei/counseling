@@ -12,5 +12,5 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 public class CounselorQueryParam extends PagingParam {
 
-    private Integer callerId;
+    private Integer counselorId;
 }
